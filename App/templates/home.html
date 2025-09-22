@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Home - Final Project{% endblock %}
+{% block content %}
+  <h1 class="title">Welcome to Shay's Final Project</h1>
+
+  <form method="post" class="card">
+    <label class="label" for="name">Enter your name:</label>
+    <input id="name" name="name" type="text" required class="input">
+    <button type="submit" class="btn">Go</button>
+  </form>
+{% endblock %}

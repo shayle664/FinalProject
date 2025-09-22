@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Hello{% endblock %}
+{% block content %}
+  <h1 class="title">{{ message }}</h1>
+  <a href="{{ url_for('home') }}" class="btn">Back</a>
+{% endblock %}
