@@ -3,7 +3,7 @@ name: CI - DEV to QA
 on:
   pull_request:
     branches:
-      - QA
+      - qa
 
 jobs:
   test:
