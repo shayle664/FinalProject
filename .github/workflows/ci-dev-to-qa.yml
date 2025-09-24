@@ -4,13 +4,31 @@ on:
   pull_request:
     branches:
       - qa
+    paths:
+      - '**/*.py'
+      - '**/Dockerfile'
+      - '**/requirements.txt'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Dummy test
-        run: echo "✅ CI pipeline running"
 
+    steps:
+      # 1. Checkout your code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:latest .
+
+      # 3. Run the container
+      - name: Run container
+        run: |
+          docker run -d --name myapp -p 5007:5007 myapp:latest
+          
+      # 4. Check container is running
+      - name: Verify container is running
+        run: |
+          docker ps -a
