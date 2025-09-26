@@ -1,7 +1,7 @@
 name: CI - DEV to QA
 
 on:
-  pull_request:
+  push:
     branches:
       - qa
 
@@ -28,3 +28,21 @@ jobs:
       - name: Verify container is running
         run: |
           docker ps -a
+
+      - name: Test app
+        env:
+          URL: http://localhost:5007/
+        run: |
+          html="$(curl -sS -L "$URL")"
+          echo "$html" | grep -q 'Welcome to Shay'\''s Final Project' \
+            || { echo "Expected title not found"; exit 1; }
+
+      - name: Negative test
+        env:
+          URL: http://localhost:5007/blabla
+        run: |
+          html="$(curl -sS -L "$URL")"
+          echo "$html" | grep -q 'Oops! The page you are looking for does not exist.' \
+            || { echo "Expected title not found"; exit 1; }
+
+            
