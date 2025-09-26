@@ -7,24 +7,53 @@ on:
 
 jobs:
   build:
+    name: build
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Build the Docker image
       - name: Build Docker image
         run: |
           docker build -t myapp:latest .
 
-      # 3. Run the container
       - name: Run container
         run: |
           docker run -d --name myapp -p 5007:5007 myapp:latest
           
-      # 4. Check container is running
       - name: Verify container is running
         run: |
           docker ps -a
+
+      - name: Wait for service to be ready
+        env:
+          URL: http://localhost:5007/
+        run: |
+          for i in {1..60}; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "$URL" || true)
+            if [ "$code" = "200" ]; then
+              echo "Service is up"; exit 0
+            fi
+            echo "Waiting ($i/60)... got $code"
+            sleep 2
+          done
+          echo "Service did not become ready in time"; exit 1
+
+      - name: Test app
+        env:
+          URL: http://localhost:5007/
+        run: |
+          html="$(curl -sS -L "$URL")"
+          echo "$html" | grep -q 'Welcome to Shay'\''s Final Project' \
+            || { echo "Expected title not found"; exit 1; }
+
+      - name: Negative test
+        env:
+          URL: http://localhost:5007/blabla
+        run: |
+          html="$(curl -sS -L "$URL")"
+          echo "$html" | grep -q 'Oops! The page you are looking for does not exist.' \
+            || { echo "Expected title not found"; exit 1; }
+
+            
