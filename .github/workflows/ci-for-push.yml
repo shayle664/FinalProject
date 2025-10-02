@@ -30,7 +30,8 @@ jobs:
       - name: Code style & lint
         run: |
           ruff check .
-          black --check .
+          ruff format .
+          black .
 
       # type-check
       - name: Type check
