@@ -8,6 +8,10 @@ jobs:
   lite:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: App
+        
     steps:
       - uses: actions/checkout@v4
 
@@ -25,8 +29,8 @@ jobs:
       # style + lint
       - name: Code style & lint
         run: |
-          ruff .           # fast linter
-          black --check .  # formatting check
+          ruff .
+          black --check .
 
       # type-check
       - name: Type check
