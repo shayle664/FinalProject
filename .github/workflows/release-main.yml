@@ -4,7 +4,6 @@ name: Build & Test for main (PR + post-merge)
 on:
   pull_request:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
