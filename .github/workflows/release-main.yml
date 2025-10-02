@@ -1,0 +1,126 @@
+# .github/workflows/build-test-main.yml
+name: Build & Test for main (PR + post-merge)
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  TEST_PORT: 5007
+  TEST_URL: http://localhost:${{ env.TEST_PORT }}/
+
+jobs:
+  validate-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: App
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container image
+        working-directory: .
+        run: docker build -t "$IMAGE" .
+
+      - name: Run container
+        run: |
+          docker run -d -p $TEST_PORT:$TEST_PORT --name app "$IMAGE"
+          for i in {1..60}; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
+            [ "$code" = "200" ] && break
+            echo "Waiting ($i/60)... code=$code"; sleep 2
+          done
+          [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
+
+      - name: Curl assertions
+        run: |
+          html=$(curl -sS -L "${TEST_URL}")
+          echo "$html" | grep -q "Welcome to Shay's Final Project" \
+            || { echo "Expected title not found"; exit 1; }
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f app || true
+
+  post-merge:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        working-directory: App
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: App/requirements.txt
+
+      - name: Install deps (+ test tools)
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pip install ruff black mypy pytest pytest-cov
+
+      - name: Lint / Style / Types
+        run: |
+          ruff check .
+          black --check .
+          mypy .
+
+      - name: Run tests (full)
+        run: pytest -q --maxfail=1 --disable-warnings --cov
+
+      - name: Build container image
+        working-directory: .
+        run: docker build -t "$IMAGE" .
+
+      - name: Run container (smoke)
+        working-directory: .
+        run: |
+          docker run -d -p $TEST_PORT:$TEST_PORT --name app "$IMAGE"
+          for i in {1..60}; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
+            [ "$code" = "200" ] && break
+            echo "Waiting ($i/60)... code=$code"; sleep 2
+          done
+          [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
+
+      - name: Curl assertions
+        working-directory: .
+        run: |
+          html=$(curl -sS -L "${TEST_URL}")
+          echo "$html" | grep -q "Welcome to Shay's Final Project"
+
+      - name: Stop container
+        if: always()
+        working-directory: .
+        run: docker rm -f app
+
+      # Push image only after merge to main
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        working-directory: .
+        run: docker push "$IMAGE"
+
