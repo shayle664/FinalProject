@@ -29,7 +29,7 @@ jobs:
       # style + lint
       - name: Code style & lint
         run: |
-          ruff .
+          ruff check .
           black --check .
 
       # type-check
