@@ -39,11 +39,30 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: cURL assertions
+      - name: QA Tests
         run: |
           html=$(curl -sS -L "${TEST_URL}")
           echo "$html" | grep -q "Welcome to Shay's Final Project" \
             || { echo "Expected title not found"; exit 1; }
+
+        run: |
+          html=$(curl -sS -L "${TEST_URL}/hello/Shay")
+          echo "$html" | grep -q "Shay, you are a champion!" \
+            || { echo "Expected title not found"; exit 1; }
+
+        run: |
+          html=$(curl -sS -L "${TEST_URL}/hello/Noy")
+          echo "$html" | grep -q "Hello, Noy" \
+            || { echo "Expected title not found"; exit 1; }
+
+
+
+      - name: Nagative test
+        run: |
+          html=$(curl -sS -L "${TEST_URL}/shay")
+          echo "$html" | grep -q "Oops! The page you are looking for does not exist." \
+            || { echo "Expected title not found"; exit 1; }
+
 
       - name: Teardown
         if: always()
