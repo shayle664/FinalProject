@@ -30,11 +30,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build container image
-        run: docker build -t "$IMAGE" .
+        run: docker build -t "$LOCAL_IMAGE" .
 
       - name: Run & wait (smoke)
         run: |
-          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$LOCAL_IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
