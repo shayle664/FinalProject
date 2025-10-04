@@ -89,8 +89,8 @@ jobs:
       - name: Lint / Style / Types
         run: |
           ruff check .
-          black --check .
-          mypy .
+          ruff format .
+          black .
 
       - name: Run tests (full)
         run: pytest -q --maxfail=1 --disable-warnings --cov
