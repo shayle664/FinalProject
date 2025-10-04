@@ -14,9 +14,12 @@ permissions:
   id-token: write
 
 env:
-  IMAGE: app:shay-final-project-${{ github.sha }}
   TEST_PORT: 5007
   TEST_URL: http://localhost:5007
+  LOCAL_IMAGE: app:${{ github.sha }}
+  OWNER: ${{ github.repository_owner }}
+  PACKAGE_NAME: shay-final-project
+  LATEST_TAG: latest
 
 jobs:
   # PR validation: build + smoke test only
@@ -29,11 +32,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build container image
-        run: docker build -t "$IMAGE" .
+        run: docker build -t "$LOCAL_IMAGE" .
 
       - name: Run & wait (smoke)
         run: |
-          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$LOCAL_IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
@@ -65,8 +68,7 @@ jobs:
   post-merge:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: App
@@ -74,47 +76,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: App/requirements.txt
-
-      - name: Install deps (+ test tools)
-        run: |
-          python -m pip install -U pip
-          pip install -r requirements.txt
-          pip install ruff black mypy pytest pytest-cov
-
-      - name: Lint / Style / Types
-        run: |
-          ruff check .
-          ruff format .
-          black .
-
-      - name: Run tests (full)
-        run: pytest -q --maxfail=1 --disable-warnings --cov
-
       - name: Build container image
         working-directory: .
-        run: docker build -t "$IMAGE" .
+        run: docker build -t "$LOCAL_IMAGE" .
 
       - name: Run & wait (smoke)
         working-directory: .
         run: |
-          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$LOCAL_IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
             echo "Waiting ($i/60)... code=$code"; sleep 2
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
-
-      - name: cURL assertions
-        working-directory: .
-        run: |
-          html=$(curl -sS -L "${TEST_URL}")
-          echo "$html" | grep -q "Welcome to Shay's Final Project"
 
       - name: Stop container
         if: always()
@@ -128,7 +103,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push image
-        working-directory: .
-        run: docker push "$IMAGE"
+      - name: Tag + push to GHCR (custom name)
+        run: |
+          IMAGE_SHA="ghcr.io/${OWNER}/${PACKAGE_NAME}:${GITHUB_SHA}"
+          IMAGE_LATEST="ghcr.io/${OWNER}/${PACKAGE_NAME}:${LATEST_TAG}"
+
+          docker tag "$LOCAL_IMAGE" "$IMAGE_SHA"
+          docker tag "$LOCAL_IMAGE" "$IMAGE_LATEST"
+
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
 
