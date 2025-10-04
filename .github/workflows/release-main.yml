@@ -39,22 +39,22 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: QA: /
+      - name: "QA: /"
         run: |
           html=$(curl -sS -L "${TEST_URL}")
           echo "$html" | grep -q "Welcome to Shay's Final Project"
 
-      - name: QA: /hello/Shay
+      - name: "QA: /hello/Shay"
         run: |
           html=$(curl -sS -L "${TEST_URL}hello/Shay")
           echo "$html" | grep -q "Shay, you are a champion!"
 
-      - name: QA: /hello/Noy
+      - name: "QA: /hello/Noy"
         run: |
           html=$(curl -sS -L "${TEST_URL}hello/Noy")
           echo "$html" | grep -q "Hello, Noy"
 
-      - name: Negative: /shay returns 404
+      - name: "Negative: /shay returns 404"
         run: |
           code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}shay" || true)
           [ "$code" = "404" ] || { echo "Expected 404, got $code"; exit 1; }
