@@ -1,4 +1,4 @@
-# .github/workflows/build-test-main.yml
+# .github/workflows/release-main.yml
 name: Build & Test for main (PR + post-merge)
 
 on:
@@ -6,31 +6,32 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 env:
-  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  IMAGE: app:shay-final-project-${{ github.sha }}
   TEST_PORT: 5007
-  TEST_URL: http://localhost:${{ env.TEST_PORT }}/
+  TEST_URL: http://localhost:5007
 
 jobs:
+  # PR validation: build + smoke test only
   validate-pr:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    defaults:
-      run:
-        working-directory: App
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Build container image
-        working-directory: .
         run: docker build -t "$IMAGE" .
 
-      - name: Run container
+      - name: Run & wait (smoke)
         run: |
-          docker run -d -p $TEST_PORT:$TEST_PORT --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
@@ -38,20 +39,31 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: Curl assertions
+      - name: "QA: /"
         run: |
           html=$(curl -sS -L "${TEST_URL}")
-          echo "$html" | grep -q "Welcome to Shay's Final Project" \
-            || { echo "Expected title not found"; exit 1; }
+          echo "$html" | grep -q "Welcome to Shay's Final Project"
 
-      - name: Stop container
-        if: always()
-        run: docker rm -f app || true
+      - name: "QA: /hello/Shay"
+        run: |
+          html=$(curl -sS -L "${TEST_URL}/hello/Shay")
+          echo "$html" | grep -q "Shay, you are a champion!"
 
+      - name: "QA: /hello/Noy"
+        run: |
+          html=$(curl -sS -L "${TEST_URL}/hello/Noy")
+          echo "$html" | grep -q "Hello, Noy"
+
+      - name: "Negative: /shay returns 404"
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}/shay" || true)
+          [ "$code" = "404" ] || { echo "Expected 404, got $code"; exit 1; }
+
+  # Post-merge: full pipeline + push image
   post-merge:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     defaults:
       run:
@@ -85,10 +97,10 @@ jobs:
         working-directory: .
         run: docker build -t "$IMAGE" .
 
-      - name: Run container (smoke)
+      - name: Run & wait (smoke)
         working-directory: .
         run: |
-          docker run -d -p $TEST_PORT:$TEST_PORT --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
@@ -96,7 +108,7 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: Curl assertions
+      - name: cURL assertions
         working-directory: .
         run: |
           html=$(curl -sS -L "${TEST_URL}")
@@ -105,9 +117,8 @@ jobs:
       - name: Stop container
         if: always()
         working-directory: .
-        run: docker rm -f app
+        run: docker rm -f app || true
 
-      # Push image only after merge to main
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
