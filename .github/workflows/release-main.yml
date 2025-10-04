@@ -39,34 +39,25 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: QA Tests
+      - name: QA: /
         run: |
           html=$(curl -sS -L "${TEST_URL}")
-          echo "$html" | grep -q "Welcome to Shay's Final Project" \
-            || { echo "Expected title not found"; exit 1; }
+          echo "$html" | grep -q "Welcome to Shay's Final Project"
 
+      - name: QA: /hello/Shay
         run: |
-          html=$(curl -sS -L "${TEST_URL}/hello/Shay")
-          echo "$html" | grep -q "Shay, you are a champion!" \
-            || { echo "Expected title not found"; exit 1; }
+          html=$(curl -sS -L "${TEST_URL}hello/Shay")
+          echo "$html" | grep -q "Shay, you are a champion!"
 
+      - name: QA: /hello/Noy
         run: |
-          html=$(curl -sS -L "${TEST_URL}/hello/Noy")
-          echo "$html" | grep -q "Hello, Noy" \
-            || { echo "Expected title not found"; exit 1; }
+          html=$(curl -sS -L "${TEST_URL}hello/Noy")
+          echo "$html" | grep -q "Hello, Noy"
 
-
-
-      - name: Nagative test
+      - name: Negative: /shay returns 404
         run: |
-          html=$(curl -sS -L "${TEST_URL}/shay")
-          echo "$html" | grep -q "Oops! The page you are looking for does not exist." \
-            || { echo "Expected title not found"; exit 1; }
-
-
-      - name: Teardown
-        if: always()
-        run: docker rm -f app || true
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}shay" || true)
+          [ "$code" = "404" ] || { echo "Expected 404, got $code"; exit 1; }
 
   # Post-merge: full pipeline + push image
   post-merge:
