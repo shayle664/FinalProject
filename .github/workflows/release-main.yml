@@ -12,9 +12,12 @@ permissions:
   id-token: write
 
 env:
-  IMAGE: ghcr.io/${{ toLower(github.repository) }}:${{ github.sha }}
   TEST_PORT: 5007
   TEST_URL: http://localhost:5007
+  LOCAL_IMAGE: app:${{ github.sha }}
+  OWNER: ${{ github.repository_owner }}
+  PACKAGE_NAME: shay-final-project
+  LATEST_TAG: latest
 
 jobs:
   # PR validation: build + smoke test only
@@ -63,7 +66,7 @@ jobs:
   post-merge:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: App
@@ -73,12 +76,12 @@ jobs:
 
       - name: Build container image
         working-directory: .
-        run: docker build -t "$IMAGE" .
+        run: docker build -t "$LOCAL_IMAGE" .
 
       - name: Run & wait (smoke)
         working-directory: .
         run: |
-          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$IMAGE"
+          docker run -d -p ${TEST_PORT}:${TEST_PORT} --name app "$LOCAL_IMAGE"
           for i in {1..60}; do
             code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}" || true)
             [ "$code" = "200" ] && break
@@ -98,10 +101,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push image
+      - name: Tag + push to GHCR (custom name)
         run: |
-          docker tag "$IMAGE" ghcr.io/${{ toLower(github.repository) }}:latest
-          docker push "$IMAGE"
-          docker push ghcr.io/${{ toLower(github.repository) }}:latest
+          IMAGE_SHA="ghcr.io/${OWNER}/${PACKAGE_NAME}:${GITHUB_SHA}"
+          IMAGE_LATEST="ghcr.io/${OWNER}/${PACKAGE_NAME}:${LATEST_TAG}"
 
+          docker tag "$LOCAL_IMAGE" "$IMAGE_SHA"
+          docker tag "$LOCAL_IMAGE" "$IMAGE_LATEST"
+
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
 
