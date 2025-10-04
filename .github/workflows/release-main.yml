@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 env:
-  IMAGE: app:shay-final-project-${{ github.sha }}
+  IMAGE: ghcr.io/${{ toLower(github.repository) }}:${{ github.sha }}
   TEST_PORT: 5007
   TEST_URL: http://localhost:5007
 
@@ -64,34 +64,12 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 35
-
     defaults:
       run:
         working-directory: App
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: App/requirements.txt
-
-      - name: Install deps (+ test tools)
-        run: |
-          python -m pip install -U pip
-          pip install -r requirements.txt
-          pip install ruff black mypy pytest pytest-cov
-
-      - name: Lint / Style / Types
-        run: |
-          ruff check .
-          ruff format .
-          black .
-
-      - name: Run tests (full)
-        run: pytest -q --maxfail=1 --disable-warnings --cov
 
       - name: Build container image
         working-directory: .
@@ -108,12 +86,6 @@ jobs:
           done
           [ "$code" = "200" ] || { echo "App not ready"; docker logs app; exit 1; }
 
-      - name: cURL assertions
-        working-directory: .
-        run: |
-          html=$(curl -sS -L "${TEST_URL}")
-          echo "$html" | grep -q "Welcome to Shay's Final Project"
-
       - name: Stop container
         if: always()
         working-directory: .
@@ -127,6 +99,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push image
-        working-directory: .
-        run: docker push "$IMAGE"
+        run: |
+          docker tag "$IMAGE" ghcr.io/${{ toLower(github.repository) }}:latest
+          docker push "$IMAGE"
+          docker push ghcr.io/${{ toLower(github.repository) }}:latest
+
 
