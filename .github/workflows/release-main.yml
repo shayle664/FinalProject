@@ -12,8 +12,9 @@ permissions:
   id-token: write
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+  IMAGE: app:shay-final-project-${{ github.sha }}
   TEST_PORT: 5007
+  TEST_URL: http://localhost:5007
 
 jobs:
   # PR validation: build + smoke test only
@@ -21,9 +22,6 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    env:
-      TEST_URL: http://localhost:5007
 
     steps:
       - uses: actions/checkout@v4
@@ -60,9 +58,6 @@ jobs:
     defaults:
       run:
         working-directory: App
-
-    env:
-      TEST_URL: http://localhost:5007
 
     steps:
       - uses: actions/checkout@v4
