@@ -46,17 +46,17 @@ jobs:
 
       - name: "QA: /hello/Shay"
         run: |
-          html=$(curl -sS -L "${TEST_URL}hello/Shay")
+          html=$(curl -sS -L "${TEST_URL}/hello/Shay")
           echo "$html" | grep -q "Shay, you are a champion!"
 
       - name: "QA: /hello/Noy"
         run: |
-          html=$(curl -sS -L "${TEST_URL}hello/Noy")
+          html=$(curl -sS -L "${TEST_URL}/hello/Noy")
           echo "$html" | grep -q "Hello, Noy"
 
       - name: "Negative: /shay returns 404"
         run: |
-          code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}shay" || true)
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "${TEST_URL}/shay" || true)
           [ "$code" = "404" ] || { echo "Expected 404, got $code"; exit 1; }
 
   # Post-merge: full pipeline + push image
