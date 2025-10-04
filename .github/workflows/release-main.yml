@@ -62,7 +62,7 @@ jobs:
         working-directory: App
 
     env:
-      TEST_URL: http://localhost:${{ env.TEST_PORT }}/
+      TEST_URL: http://localhost:5007
 
     steps:
       - uses: actions/checkout@v4
