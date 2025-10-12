@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+# Install Docker on Amazon Linux 2023
+dnf update -y
+dnf install -y docker
+systemctl enable --now docker
+
+# Pull & run
+docker pull ${image}
+# Stop old container if exists
+docker rm -f app || true
+
+# Run and map port 80 -> container's internal port
+docker run -d --name app --restart unless-stopped \
+  -p ${exposed_port}:${container_port} \
+  ${image}
+
