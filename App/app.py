@@ -11,6 +11,8 @@ HELLO_THEMES = [
     "theme-plum",
     "theme-ocean",
 ]
+
+
 # Home Page
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -18,6 +20,7 @@ def home():
         name = request.form.get("name", "").strip()
         return redirect(url_for("hello", name=name))
     return render_template("home.html", theme="theme-ocean")
+
 
 # Greeting Page
 @app.route("/hello/<name>")
@@ -34,6 +37,7 @@ def hello(name):
 
     theme = random.choice(HELLO_THEMES)
     return render_template("hello.html", message=message, theme=theme)
+
 
 # Custom 404
 @app.errorhandler(404)
