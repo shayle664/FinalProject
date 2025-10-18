@@ -14,11 +14,9 @@ spec:
       labels:
         app: shay-final-project
     spec:
-      imagePullSecrets:
-        - name: ghcr-creds
       containers:
         - name: app
-          image: ghcr.io/OWNER/shay-final-project:latest
+          image: ghcr.io/shayle664/shay-final-project:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5007
