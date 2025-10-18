@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shay-final-project
+  labels:
+    app: shay-final-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shay-final-project
+  template:
+    metadata:
+      labels:
+        app: shay-final-project
+    spec:
+      imagePullSecrets:
+        - name: ghcr-creds
+      containers:
+        - name: app
+          image: ghcr.io/OWNER/shay-final-project:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5007
+          env:
+            - name: PORT
+              value: "5007"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5007
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5007
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
