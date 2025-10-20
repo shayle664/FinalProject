@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shay-final-project-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/shayle664/FinalProject.git
+    targetRevision: main
+    path: deploy/helm/shay-final-project
+    helm:
+      values: |
+        replicaCount: 1
+        image:
+          repository: ghcr.io/shayle664/shay-final-project
+          tag: latest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

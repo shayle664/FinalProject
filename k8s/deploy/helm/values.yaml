@@ -1,0 +1,31 @@
+image:
+  repository: ghcr.io/shayle664/shay-final-project
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 5007
+
+containerPort: 5007
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+# Optional Ingress (disabled by default)
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: shay-final.dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
