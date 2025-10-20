@@ -1,0 +1,6 @@
+apiVersion: v2
+name: shay-final-project
+description: Helm chart for Shay's app
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
