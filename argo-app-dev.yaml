@@ -7,8 +7,8 @@ spec:
   project: default
   source:
     repoURL: https://github.com/shayle664/FinalProject.git
-    targetRevision: main
-    path: deploy/helm/shay-final-project
+    targetRevision: k8s
+    path: k8s/deploy/helm
     helm:
       values: |
         replicaCount: 1
