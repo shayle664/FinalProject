@@ -16,13 +16,11 @@ spec:
     spec:
       containers:
         - name: app
-          # TODO: change this to your image (Docker Hub or GHCR)
-          image: ghcr.io/shayle664/FinalProject:shay-final-project
+          image: ghcr.io/shayle664/shay-final-project:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5007
           env:
-            # examples; delete if not needed
             - name: FLASK_ENV
               value: "production"
           readinessProbe:
