@@ -8,8 +8,9 @@ docker run -p 5007:5007 app:test
 open http://localhost:5007
 ```
 ## Deploy
+```
 helm upgrade --install final-project k8s/helm-final-project -n app-dev
-
+```
 ## Ops (CI/CD & GitOps)
 
 **CI (GitHub Actions)**
@@ -37,23 +38,24 @@ NS=app-dev
 helm upgrade --install final-project k8s/helm-final-project -n $NS
 kubectl get deploy,svc,ingress,pods -n $NS
 ```
-## Argo CD (GitOps) – Run It
-**Goal:** auto-deploy the Helm chart in k8s/helm-final-project whenever you push to main.
+### Argo CD (run it)
 
-### 1) Install Argo CD and run it(once)
-```
+# 1) Install Argo CD (once)
 kubectl create ns argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl apply -f argo-app-dev.yaml   # app points to k8s/helm-final-project
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# 2) Apply the Application (tracks the Helm chart in this repo)
+kubectl apply -f argo-app-dev.yaml          # metadata.namespace should be argocd
+
+# 3) Verify
 kubectl -n argocd get applications
 kubectl -n app-dev get deploy,svc,ingress,pods
-```
-**Prove it listens to Git**: edit k8s/helm-final-project/values.yaml (e.g. replicaCount: 2→3) on main, then:\
 
-```
+# 4) Prove GitOps: change replicas and push to main
+#   edit: k8s/helm-final-project/values.yaml  (replicaCount: 2 -> 3)
 kubectl -n argocd get application final-project -w
 kubectl -n app-dev get deploy
-```
 
 ## More
 - App: ./App/README.md
