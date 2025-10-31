@@ -1,23 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: shay-final-project-dev
+  name: final-project
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/shayle664/FinalProject.git
-    targetRevision: k8s
-    path: k8s/deploy/helm
-    helm:
-      values: |
-        replicaCount: 1
-        image:
-          repository: ghcr.io/shayle664/shay-final-project
-          tag: latest
+    targetRevision: main
+    path: k8s/helm-final-project
   destination:
     server: https://kubernetes.default.svc
-    namespace: app-dev
+    namespace: helm-test
   syncPolicy:
     automated:
       prune: true
