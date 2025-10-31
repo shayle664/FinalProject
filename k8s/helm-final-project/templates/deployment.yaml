@@ -1,21 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "final-project.fullname" . }}
+  name: {{ include "helm-final-project.fullname" . }}
   labels:
-    {{- include "final-project.labels" . | nindent 4 }}
+    {{- include "helm-final-project.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "final-project.name" . }}
+      app.kubernetes.io/name: {{ include "helm-final-project.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "final-project.name" . }}
+        app.kubernetes.io/name: {{ include "helm-final-project.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken | default false }}
+      {{- if and .Values.serviceAccount.create .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
