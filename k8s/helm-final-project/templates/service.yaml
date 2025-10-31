@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "final-project.fullname" . }}
+  name: {{ include "helm-final-project.fullname" . }}
   labels:
-    {{- include "final-project.labels" . | nindent 4 }}
+    {{- include "helm-final-project.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,5 +12,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "final-project.name" . }}
+    app.kubernetes.io/name: {{ include "helm-final-project.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
