@@ -40,20 +40,20 @@ kubectl get deploy,svc,ingress,pods -n $NS
 ```
 ### Argo CD (run it)
 
-# 1) Install Argo CD (once)
+#### 1) Install Argo CD (once)
 kubectl create ns argocd
 kubectl apply -n argocd \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-# 2) Apply the Application (tracks the Helm chart in this repo)
+#### 2) Apply the Application (tracks the Helm chart in this repo)
 kubectl apply -f argo-app-dev.yaml          # metadata.namespace should be argocd
 
-# 3) Verify
+#### 3) Verify
 kubectl -n argocd get applications
 kubectl -n app-dev get deploy,svc,ingress,pods
 
-# 4) Prove GitOps: change replicas and push to main
-#   edit: k8s/helm-final-project/values.yaml  (replicaCount: 2 -> 3)
+#### 4) Prove GitOps: change replicas and push to main
+####   edit: k8s/helm-final-project/values.yaml  (replicaCount: 2 -> 3)
 kubectl -n argocd get application final-project -w
 kubectl -n app-dev get deploy
 
