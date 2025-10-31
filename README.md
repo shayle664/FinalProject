@@ -37,13 +37,28 @@ NS=app-dev
 helm upgrade --install final-project k8s/helm-final-project -n $NS
 kubectl get deploy,svc,ingress,pods -n $NS
 ```
-## Argo CD (GitOps)
-- Single Application that tracks k8s/helm-final-project and auto-syncs with prune + selfHeal.
-- Quick verification:
-  1. Edit k8s/helm-final-project/values.yaml (e.g., replicaCount: 2 → 3) and push to main. 
-  2. Watch: kubectl -n argocd get application final-project -w 
-  3. Check: kubectl -n app-dev get deploy  
+## Argo CD (GitOps) – Run It
+**Goal:** auto-deploy the Helm chart in k8s/helm-final-project whenever you push to main.
+#### Prereqs
 
+- Kubernetes reachable (you’re on K3s)
+- kubectl installed and pointing to the cluster
+
+### 1) Install Argo CD (once)
+```
+kubectl create namespace argocd
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+#### Argo UI (pick one):
+- Port-forward (quick):
+kubectl -n argocd port-forward svc/argocd-server 8081:80 → open http://localhost:8081
+
+### Apply it:
+```
+kubectl apply -f argo-app-dev.yaml
+kubectl -n argocd get applications
+```
 
 ## More
 - App: ./App/README.md
