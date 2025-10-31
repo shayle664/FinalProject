@@ -8,8 +8,9 @@ docker run -p 5007:5007 app:test
 open http://localhost:5007
 ```
 ## Deploy
+```
 helm upgrade --install final-project k8s/helm-final-project -n app-dev
-
+```
 ## Ops (CI/CD & GitOps)
 
 **CI (GitHub Actions)**
