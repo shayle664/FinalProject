@@ -39,28 +39,22 @@ kubectl get deploy,svc,ingress,pods -n $NS
 ```
 ## Argo CD (GitOps) – Run It
 **Goal:** auto-deploy the Helm chart in k8s/helm-final-project whenever you push to main.
-#### Prereqs
 
-- Kubernetes reachable (you’re on K3s)
-- kubectl installed and pointing to the cluster
-
-### 1) Install Argo CD (once)
+### 1) Install Argo CD and run it(once)
 ```
-kubectl create namespace argocd
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-```
-#### Argo UI (pick one):
-- Port-forward (quick):
-kubectl -n argocd port-forward svc/argocd-server 8081:80 → open http://localhost:8081
-
-### Apply it:
-```
-kubectl apply -f argo-app-dev.yaml
+kubectl create ns argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -f argo-app-dev.yaml   # app points to k8s/helm-final-project
 kubectl -n argocd get applications
+kubectl -n app-dev get deploy,svc,ingress,pods
+```
+**Prove it listens to Git**: edit k8s/helm-final-project/values.yaml (e.g. replicaCount: 2→3) on main, then:\
+
+```
+kubectl -n argocd get application final-project -w
+kubectl -n app-dev get deploy
 ```
 
 ## More
 - App: ./App/README.md
 - Kubernetes/Helm: ./k8s/README.md
-- Ops (CI/CD + Argo CD): ./ops/README.md
