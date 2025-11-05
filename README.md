@@ -1,16 +1,34 @@
 # FinalProject
 Tiny Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
 
-## Quick start
-```
+## Prerequisites
+Before starting, ensure you have the following installed:
+- **Docker** (for local testing and building images)
+- **Kubernetes cluster** (K3s, K8s, Minikube, or Docker Desktop with K8s enabled)
+- **kubectl** (Kubernetes CLI)
+- **Helm 3** (for deploying the application)
+- **Git** (for cloning the repository)
+
+Optional (for GitOps):
+- **Argo CD** (installed in your cluster)
+
+## Quick Start
+
+### Option 1: Run Locally with Docker (for testing)
+Build and run the app in a Docker container:
+```bash
 docker build -t app:test .
 docker run -p 5007:5007 app:test
-open http://localhost:5007
+# Open http://localhost:5007 in your browser
 ```
-## Deploy
+
+### Option 2: Deploy to Kubernetes with Helm (production-ready)
+Deploy the app to your Kubernetes cluster:
+```bash
+helm upgrade --install final-project k8s/helm-final-project -n app-dev --create-namespace
+kubectl get deploy,svc,ingress,pods -n app-dev
 ```
-helm upgrade --install final-project k8s/helm-final-project -n app-dev
-```
+Access via the Ingress URL (depends on your cluster setup)
 ## Ops (CI/CD & GitOps)
 
 **CI (GitHub Actions)**
@@ -28,7 +46,7 @@ helm upgrade --install final-project k8s/helm-final-project -n app-dev
 
 **Image (pull example)**
 ```bash
-docker pull ghcr.io/<OWNER>/shay-final-project:latest
+docker pull ghcr.io/shayle664/shay-final-project:latest
 ```
 ## Kubernetes (Helm)
 - Chart: k8s/helm-final-project
@@ -49,7 +67,7 @@ kubectl apply -n argocd \
 
 #### 2) Apply the Application (tracks the Helm chart in this repo)
 ```
-kubectl apply -f argo-app-dev.yaml          # metadata.namespace should be argocd
+kubectl apply -f argo-app-dev.yaml
 ```
 #### 3) Verify
 ```
