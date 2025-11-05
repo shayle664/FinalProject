@@ -22,64 +22,75 @@ docker run -p 5007:5007 app:test
 # Open http://localhost:5007 in your browser
 ```
 
-### Option 2: Deploy to Kubernetes with Helm (production-ready)
-Deploy the app to your Kubernetes cluster:
+### Option 2: Deploy to Kubernetes
+
+Choose one of the following deployment methods:
+
+#### A. Manual Deployment with Helm
+Deploy the app directly to your Kubernetes cluster using Helm:
 ```bash
 helm upgrade --install final-project k8s/helm-final-project -n app-dev --create-namespace
 kubectl get deploy,svc,ingress,pods -n app-dev
 ```
-Access via the Ingress URL (depends on your cluster setup)
-## Ops (CI/CD & GitOps)
 
-**CI (GitHub Actions)**
-- **ci-for-push.yml** — runs on every push/PR (except direct pushes to `main`):
-  1. Checkout  
-  2. Setup Python 3.12  
-  3. `pip install -r App/requirements.txt && pip install ruff mypy`  
-  4. `ruff format --check . && ruff check .`  
-  5. `mypy .`
-- **release-main.yml**
-  - **PR → main**: build Docker image, run the app on port **5007**, smoke test with `curl` (`/`, `/hello/Shay`, `/hello/Noy`, and `/shay` = 404).
-  - **Push → main**: build + smoke, then push to GHCR:
-    - `ghcr.io/<OWNER>/shay-final-project:<GITHUB_SHA>`
-    - `ghcr.io/<OWNER>/shay-final-project:latest`
+#### B. GitOps Deployment with Argo CD (Recommended)
+Argo CD automatically deploys and syncs your app from Git—no manual Helm commands needed.
 
-**Image (pull example)**
+**Step 1: Install Argo CD (one-time setup)**
 ```bash
-docker pull ghcr.io/shayle664/shay-final-project:latest
-```
-## Kubernetes (Helm)
-- Chart: k8s/helm-final-project
-- Defaults: replicaCount=2, Service 80 → containerPort 5007, Ingress via Traefik.
-```
-NS=app-dev
-helm upgrade --install final-project k8s/helm-final-project -n $NS
-kubectl get deploy,svc,ingress,pods -n $NS
-```
-### Argo CD (run it)
-
-#### 1) Install Argo CD (once)
-```
-kubectl create ns argocd
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-#### 2) Apply the Application (tracks the Helm chart in this repo)
-```
+**Step 2: Deploy the Application**
+```bash
 kubectl apply -f argo-app-dev.yaml
 ```
-#### 3) Verify
-```
+
+**Step 3: Verify Deployment**
+```bash
 kubectl -n argocd get applications
 kubectl -n app-dev get deploy,svc,ingress,pods
 ```
-#### 4) Prove GitOps: change replicas and push to main
-####   edit: k8s/helm-final-project/values.yaml  (replicaCount: 2 -> 3)
-```
+
+**Step 4: Test GitOps Auto-Sync**
+Edit `k8s/helm-final-project/values.yaml` (change `replicaCount: 3` → `4`), commit and push to `main`. Argo CD will automatically detect the change and update your cluster:
+```bash
 kubectl -n argocd get application final-project -w
-kubectl -n app-dev get deploy
+kubectl -n app-dev get deployment -w
 ```
+
+---
+
+## CI/CD Pipeline
+
+### Continuous Integration (GitHub Actions)
+
+**Workflow: `ci-for-push.yml`**
+Runs on every push/PR (except direct pushes to `main`):
+1. Checkout code
+2. Setup Python 3.12
+3. Install dependencies: `pip install -r App/requirements.txt && pip install ruff mypy`
+4. Lint code: `ruff format --check .` and `ruff check .`
+5. Type check: `mypy .`
+
+**Workflow: `release-main.yml`**
+- **On PR to `main`**: Build Docker image, start app on port 5007, run smoke tests with `curl` (`/`, `/hello/Shay`, `/hello/Noy`, `/shay` → 404)
+- **On push to `main`**: Build, test, and push images to GitHub Container Registry:
+  - `ghcr.io/shayle664/shay-final-project:latest`
+  - `ghcr.io/shayle664/shay-final-project:<GITHUB_SHA>`
+
+**Pull the latest image:**
+```bash
+docker pull ghcr.io/shayle664/shay-final-project:latest
+```
+
+### Continuous Deployment (GitOps)
+
+Argo CD monitors the `main` branch and automatically deploys changes to the `helm-test` namespace when you push updates to:
+- Helm chart templates
+- `values.yaml` configuration
+- Docker image tags
 ## More
 - App: ./App/README.md
 - Kubernetes/Helm: ./k8s/README.md
