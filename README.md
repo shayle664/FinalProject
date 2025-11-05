@@ -1,5 +1,5 @@
 # FinalProject
-Tiny Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
+Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
 
 ## Prerequisites
 Before starting, ensure you have the following installed:
@@ -9,8 +9,13 @@ Before starting, ensure you have the following installed:
 - **Helm 3** (for deploying the application)
 - **Git** (for cloning the repository)
 
-Optional (for GitOps):
-- **Argo CD** (installed in your cluster)
+## Getting Started
+
+**Clone the repository:**
+```bash
+git clone https://github.com/shayle664/FinalProject.git
+cd FinalProject
+```
 
 ## Quick Start
 
@@ -33,6 +38,10 @@ helm upgrade --install final-project k8s/helm-final-project -n app-dev --create-
 kubectl get deploy,svc,ingress,pods -n app-dev
 ```
 
+**Access the application:**
+- If using Traefik Ingress: `http://<your-cluster-ip>/`
+- Or port-forward: `kubectl port-forward -n app-dev svc/final-project 8080:80` then visit `http://localhost:8080`
+
 #### B. GitOps Deployment with Argo CD (Recommended)
 Argo CD automatically deploys and syncs your app from Git—no manual Helm commands needed.
 
@@ -53,7 +62,12 @@ kubectl -n argocd get applications
 kubectl -n app-dev get deploy,svc,ingress,pods
 ```
 
+**Access the application:**
+- If using Traefik Ingress: `http://<your-cluster-ip>/`
+- Or port-forward: `kubectl port-forward -n app-dev svc/final-project 8080:80` then visit `http://localhost:8080`
+
 **Step 4: Test GitOps Auto-Sync**
+
 Edit `k8s/helm-final-project/values.yaml` (change `replicaCount: 3` → `4`), commit and push to `main`. Argo CD will automatically detect the change and update your cluster:
 ```bash
 kubectl -n argocd get application final-project -w
@@ -67,6 +81,7 @@ kubectl -n app-dev get deployment -w
 ### Continuous Integration (GitHub Actions)
 
 **Workflow: `ci-for-push.yml`**
+
 Runs on every push/PR (except direct pushes to `main`):
 1. Checkout code
 2. Setup Python 3.12
@@ -87,10 +102,26 @@ docker pull ghcr.io/shayle664/shay-final-project:latest
 
 ### Continuous Deployment (GitOps)
 
-Argo CD monitors the `main` branch and automatically deploys changes to the `helm-test` namespace when you push updates to:
+Argo CD monitors the `main` branch and automatically deploys changes to the `app-dev` namespace when you push updates to:
 - Helm chart templates
 - `values.yaml` configuration
 - Docker image tags
-## More
-- App: ./App/README.md
-- Kubernetes/Helm: ./k8s/README.md
+
+---
+
+## Project Structure
+
+```
+FinalProject/
+├── App/                      # Flask application source code
+├── k8s/                      # Kubernetes and Helm configurations
+│   ├── helm-final-project/   # Helm chart
+│   └── k8s-simple.yaml       # Simple K8s manifest (alternative)
+├── Dockerfile                # Container image definition
+├── argo-app-dev.yaml         # Argo CD Application manifest
+└── .github/workflows/        # CI/CD pipelines
+```
+
+For more details:
+- **Application**: See [App/README.md](./App/README.md)
+- **Kubernetes/Helm**: See [k8s/README.md](./k8s/README.md)
