@@ -38,10 +38,6 @@ helm upgrade --install final-project k8s/helm-final-project -n app-dev --create-
 kubectl get deploy,svc,ingress,pods -n app-dev
 ```
 
-**Access the application:**
-- If using Traefik Ingress: `http://<your-cluster-ip>/`
-- Or port-forward: `kubectl port-forward -n app-dev svc/final-project 8080:80` then visit `http://localhost:8080`
-
 #### B. GitOps Deployment with Argo CD (Recommended)
 Argo CD automatically deploys and syncs your app from Git—no manual Helm commands needed.
 
@@ -63,8 +59,19 @@ kubectl -n app-dev get deploy,svc,ingress,pods
 ```
 
 **Access the application:**
-- If using Traefik Ingress: `http://<your-cluster-ip>/`
-- Or port-forward: `kubectl port-forward -n app-dev svc/final-project 8080:80` then visit `http://localhost:8080`
+
+The Helm chart deploys with **Traefik Ingress enabled**. Choose one of these methods:
+
+1. **Via Ingress** (if Traefik is installed in your cluster):
+   - Get your ingress IP: `kubectl get ingress -n app-dev`
+   - Visit: `http://<INGRESS-IP>/`
+   - Example: `http://192.168.1.100/` or `http://localhost/` (for local clusters)
+
+2. **Via Port-Forward** (works on any cluster, no ingress needed):
+   ```bash
+   kubectl port-forward -n app-dev svc/final-project 8080:80
+   ```
+   Then visit: `http://localhost:8080`
 
 **Step 4: Test GitOps Auto-Sync**
 
