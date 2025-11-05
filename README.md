@@ -1,5 +1,5 @@
 # FinalProject
-Tiny Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
+Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
 
 ## Prerequisites
 Before starting, ensure you have the following installed:
@@ -8,9 +8,6 @@ Before starting, ensure you have the following installed:
 - **kubectl** (Kubernetes CLI)
 - **Helm 3** (for deploying the application)
 - **Git** (for cloning the repository)
-
-Optional (for GitOps):
-- **Argo CD** (installed in your cluster)
 
 ## Quick Start
 
