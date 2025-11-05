@@ -1,6 +1,19 @@
 # FinalProject
 Flask app with CI → GHCR → K8s via Helm; Argo CD keeps cluster in sync.
 
+## Project Structure
+
+```
+FinalProject/
+├── App/                      # Flask application source code
+├── k8s/                      # Kubernetes and Helm configurations
+│   ├── helm-final-project/   # Helm chart
+│   └── k8s-simple.yaml       # Simple K8s manifest (alternative)
+├── Dockerfile                # Container image definition
+├── argo-app-dev.yaml         # Argo CD Application manifest
+└── .github/workflows/        # CI/CD pipelines
+```
+
 ## Prerequisites
 Before starting, ensure you have the following installed:
 - **Docker** (for local testing and building images)
@@ -115,19 +128,6 @@ Argo CD monitors the `main` branch and automatically deploys changes to the `app
 - Docker image tags
 
 ---
-
-## Project Structure
-
-```
-FinalProject/
-├── App/                      # Flask application source code
-├── k8s/                      # Kubernetes and Helm configurations
-│   ├── helm-final-project/   # Helm chart
-│   └── k8s-simple.yaml       # Simple K8s manifest (alternative)
-├── Dockerfile                # Container image definition
-├── argo-app-dev.yaml         # Argo CD Application manifest
-└── .github/workflows/        # CI/CD pipelines
-```
 
 For more details:
 - **Application**: See [App/README.md](./App/README.md)
