@@ -11,7 +11,7 @@ spec:
     path: k8s/helm-final-project
   destination:
     server: https://kubernetes.default.svc
-    namespace: helm-test
+    namespace: app-dev
   syncPolicy:
     automated:
       prune: true
